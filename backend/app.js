@@ -1,17 +1,72 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const DiaryEntry = require('./models/DiaryEntry');
-const Mood = require('./models/Mood');
-const Reminder = require('./models/Reminder');
-
+import express from 'express';
+import mongoose from 'mongoose';
+import connectDB from './lib/conn.js';
+import DiaryEntry from './models/DiaryEntry.js';
+import Mood from './models/Mood.js';
+import Reminder from './models/Reminder.js';
+import Attachment from './models/Attachment.js';
+import cors from 'cors';
+import dotenv from 'dotenv';
+dotenv.config();
 const app = express();
+app.use(express.json());
+app.use(cors());
+// Attachment CRUD routes
+// Create
+app.post('/api/attachments', async (req, res) => {
+  try {
+    const attachment = new Attachment(req.body);
+    await attachment.save();
+    res.status(201).json(attachment);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+// Read all
+app.get('/api/attachments', async (req, res) => {
+  try {
+    const attachments = await Attachment.find();
+    res.json(attachments);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+// Read one
+app.get('/api/attachments/:id', async (req, res) => {
+  try {
+    const attachment = await Attachment.findById(req.params.id);
+    if (!attachment) return res.status(404).json({ error: 'Not found' });
+    res.json(attachment);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+// Update
+app.put('/api/attachments/:id', async (req, res) => {
+  try {
+    const attachment = await Attachment.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!attachment) return res.status(404).json({ error: 'Not found' });
+    res.json(attachment);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+// Delete
+app.delete('/api/attachments/:id', async (req, res) => {
+  try {
+    const attachment = await Attachment.findByIdAndDelete(req.params.id);
+    if (!attachment) return res.status(404).json({ error: 'Not found' });
+    res.json({ message: 'Deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
 app.use(express.json());
 
 // Connect to MongoDB
-mongoose.connect('mongodb://localhost:27017/diary', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-});
+connectDB();
 
 // DiaryEntry CRUD routes
 // Create

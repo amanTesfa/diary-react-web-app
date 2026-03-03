@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const ReminderSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -7,4 +7,5 @@ const ReminderSchema = new mongoose.Schema({
   frequency: { type: String, enum: ['daily', 'weekly'], default: 'daily' }
 });
 
-module.exports = mongoose.model('Reminder', ReminderSchema);
+const Reminder = mongoose.model('Reminders', ReminderSchema);
+export default Reminder;
