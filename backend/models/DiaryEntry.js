@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 const DiaryEntrySchema = new mongoose.Schema({
-title: { type: String, required: true },
+title: { type: String,  },
   content: { type: String, required: true },
   mood: { type: String },
   tags: [{ type: String }],

@@ -73,16 +73,33 @@ connectDB();
 app.post('/api/diary', async (req, res) => {
   try {
     const entry = new DiaryEntry(req.body);
+    console.log("diary entry is:", entry);
     await entry.save();
     res.status(201).json(entry);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
-// Read all
+// Read all (default to today's entries, optional query params)
 app.get('/api/diary', async (req, res) => {
   try {
-    const entries = await DiaryEntry.find();
+    let query = {};
+    // only include today by default; allow override with all=true or date=YYYY-MM-DD
+    if (req.query.all !== 'true') {
+      const dateStr = req.query.date || (() => {
+        const d = new Date();
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      })();
+      const start = new Date(dateStr);
+      start.setHours(0,0,0,0);
+      const end = new Date(dateStr);
+      end.setHours(23,59,59,999);
+      query.createdAt = { $gte: start, $lte: end };
+    }
+    const entries = await DiaryEntry.find(query);
     res.json(entries);
   } catch (err) {
     res.status(500).json({ error: err.message });

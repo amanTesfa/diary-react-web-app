@@ -16,7 +16,10 @@
 	--shadow: 0 4px 24px rgba(0,0,0,0.08);
 	--transition: background 0.3s, color 0.3s, box-shadow 0.3s;
 }
-
+hr{
+	border: none;
+	border-top: 1px solid #6366f1;
+}
 body, html {
 	font-family: 'Roboto', Arial, sans-serif;
 	background: var(--bg-light);
@@ -107,4 +110,12 @@ button:hover {
 ol, ul {
     padding-left: 0rem;
 }
-.sidebar-toggle { left: 0; }
+.sidebar-toggle { left: 10px; }
+.btn-danger, .btn-info {
+     padding: 0.2rem 1.7rem !important;
+	 font-size: 14px !important; 
+}
+.text-danger {
+	color: #ff041d;
+	font-weight: bold;
+}

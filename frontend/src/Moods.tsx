@@ -9,7 +9,7 @@ function Moods() {
   const [editingId, setEditingId] = useState("");
 
   useEffect(() => {
-    axios.get(process.env.REACT_APP_API_URL + '/api/moods')
+    axios.get(import.meta.env.VITE_API_URL + '/api/moods')
       .then(res => setMoods(Array.isArray(res.data) ? res.data : []))
       .catch(() => toast.error('Failed to fetch moods'));
   }, []);
@@ -18,15 +18,15 @@ function Moods() {
     e.preventDefault();
     try {
       if (editingId) {
-        await axios.put(process.env.REACT_APP_API_URL + `/api/moods/${editingId}`, form);
+        await axios.put(import.meta.env.VITE_API_URL + `/api/moods/${editingId}`, form);
         toast.success('Mood updated');
       } else {
-        await axios.post(process.env.REACT_APP_API_URL + '/api/moods', form);
+        await axios.post(import.meta.env.VITE_API_URL + '/api/moods', form);
         toast.success('Mood added');
       }
       setForm({ name: '', emoji: '', color: '' });
       setEditingId("");
-      const res = await axios.get(process.env.REACT_APP_API_URL + '/api/moods');
+      const res = await axios.get(import.meta.env.VITE_API_URL + '/api/moods');
       setMoods(res.data);
     } catch (err: any) {
       toast.error(err?.response?.data?.error || 'Failed to save mood');
@@ -49,7 +49,8 @@ function Moods() {
 
   return (
     <div>
-      <h1>Moods</h1>
+      <h2>Moods</h2>
+      <hr />
       <form onSubmit={handleSubmit} className="card" style={{ marginBottom: '2rem', maxWidth: 500 }}>
         <input placeholder="Name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
         <input placeholder="Emoji" value={form.emoji} onChange={e => setForm({ ...form, emoji: e.target.value })} />

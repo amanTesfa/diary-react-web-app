@@ -1,91 +1,89 @@
 import React, { useEffect, useState } from 'react';
-declare const process: { env: Record<string, string | undefined> };
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import type { RemainderDTO } from './types/RemainderDTO';
+import type { DairyEntriesDTO } from './types/DairyEntriesDTO';
+import type { AttachmentDTO } from './types/AttachmentDTO';
+import type { MoodsDTO } from './types/MoodsDTO';
 
 function Reminders() {
-  const [reminders, setReminders] = useState<RemainderDTO[]>([]);
-  const [form, setForm] = useState<RemainderDTO | null>({ time: '', frequency: 'daily', isEnabled: true, userId: '' });
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string>(() => new Date().toISOString().slice(0,10));
+  const [entries, setEntries] = useState<DairyEntriesDTO[]>([]);
+  const [attachments, setAttachments] = useState<AttachmentDTO[]>([]);
+  const [moods, setMoods] = useState<MoodsDTO[]>([]);
+
+  const fetchAll = async (date: string) => {
+    try {
+      const diaryUrl = date
+        ? `${import.meta.env.VITE_API_URL}/api/diary?date=${date}`
+        : `${import.meta.env.VITE_API_URL}/api/diary?all=true`;
+      const [dRes, aRes, mRes] = await Promise.all([
+        axios.get(diaryUrl),
+        axios.get(import.meta.env.VITE_API_URL + `/api/attachments`),
+        axios.get(import.meta.env.VITE_API_URL + `/api/moods`)
+      ]);
+      setEntries(Array.isArray(dRes.data) ? dRes.data : []);
+      setAttachments(Array.isArray(aRes.data) ? aRes.data : []);
+      setMoods(Array.isArray(mRes.data) ? mRes.data : []);
+    } catch (err: any) {
+      toast.error('Failed to load data');
+    }
+  };
 
   useEffect(() => {
-    axios.get(process.env.REACT_APP_API_URL + '/api/reminders')
-      .then(res => setReminders(Array.isArray(res.data) ? res.data : []))
-      .catch(() => toast.error('Failed to fetch reminders'));
-  }, []);
+    fetchAll(selectedDate);
+  }, [selectedDate]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      if (editingId) {
-        await axios.put(process.env.REACT_APP_API_URL + `/api/reminders/${editingId}`, form);
-        toast.success('Reminder updated');
-      } else {
-        await axios.post(process.env.REACT_APP_API_URL + '/api/reminders', form);
-        toast.success('Reminder added');
-      }
-      setForm({ time: '', frequency: 'daily', isEnabled: true, userId: '' } as RemainderDTO);
-      setEditingId("");
-      const res = await axios.get(process.env.REACT_APP_API_URL + '/api/reminders');
-      setReminders(res.data);
-    } catch (err: any) {
-      toast.error(err?.response?.data?.error || 'Failed to save reminder');
-    }
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSelectedDate(e.target.value);
   };
 
-  const handleDelete = async (id:string|null|undefined) => {
-    try {
-      await axios.delete(process.env.REACT_APP_API_URL + `/api/reminders/${id}`);
-      setReminders(reminders.filter(r => r._id !== id));
-      toast.success('Reminder deleted');
-    } catch (err: any) {
-      toast.error(err?.response?.data?.error || 'Failed to delete reminder');
-    }
-  };
-
-  const handleEdit = (reminder:RemainderDTO) => {
-    setForm({
-      time: reminder.time,
-      frequency: reminder.frequency,
-      isEnabled: reminder.isEnabled,
-      userId: reminder.userId
-    });
-    setEditingId(reminder._id || null);
+  const moodEmoji = (name: string) => {
+    const m = moods.find(x => x.name === name);
+    return m?.emoji || '';
   };
 
   return (
     <div>
-      <h1>Reminders</h1>
-      <form onSubmit={handleSubmit} className="card" style={{ marginBottom: '2rem', maxWidth: 500 }}>
-        <input placeholder="Time" value={form?.time} onChange={e => setForm({ ...form, time: e.target.value } as RemainderDTO)} required />
-        <select value={form?.frequency} onChange={e => setForm({ ...form, frequency: e.target.value } as RemainderDTO)}>
-          <option value="daily">Daily</option>
-          <option value="weekly">Weekly</option>
-        </select>
-        <label style={{ marginBottom: '1rem' }}>
-          <input type="checkbox" checked={form?.isEnabled} onChange={e => setForm({ ...form, isEnabled: e.target.checked } as RemainderDTO)} style={{ marginRight: '0.5rem' }} /> Enabled
-        </label>
-        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-          <button type="submit" className="btn btn-primary">{editingId ? 'Update' : 'Add'} Reminder</button>
-          {editingId && <button type="button" className="btn btn-secondary" onClick={() => { setEditingId(null); setForm({ time: '', frequency: 'daily', isEnabled: true, userId: '' } as RemainderDTO); }}>Cancel</button>}
-        </div>
-      </form>
-      <div style={{ display: 'grid', gap: '1.5rem', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))' }}>
-        {reminders.map(reminder => (
-          <div key={reminder._id} className="card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <strong style={{ fontSize: '1.1rem' }}>{reminder.time}</strong>
-              <span style={{ color: '#6366f1', fontWeight: 500 }}>{reminder.frequency}</span>
-              <span style={{ color: reminder.isEnabled ? '#22c55e' : '#dc3545', fontWeight: 500 }}>{reminder.isEnabled ? 'Enabled' : 'Disabled'}</span>
-            </div>
-            <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem' }}>
-              <button className="btn btn-sm btn-info" onClick={() => handleEdit(reminder)}>Edit</button>
-              <button className="btn btn-sm btn-danger" onClick={() => handleDelete(reminder._id)}>Delete</button>
-            </div>
-          </div>
-        ))}
+      <h2>Diaries by Date</h2>
+      <hr />
+      <div style={{ margin: '1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <input
+          type="date"
+          value={selectedDate}
+          onChange={handleDateChange}
+          style={{ fontSize: '1.5rem', padding: '0.3rem' }}
+        />
+        <button
+          className="btn btn-secondary btn-sm"
+          onClick={() => setSelectedDate('')}
+          style={{ height: '2.3rem' }}
+        >
+          Clear
+        </button>
       </div>
+      {entries.map(ent => (
+        <div key={ent._id} className="card" style={{ marginBottom: '1rem' }}>
+          <h2>
+            {ent.title} {moodEmoji(ent.mood || '')}
+          </h2>
+          <p>{ent.content}</p>
+          {ent.tags && ent.tags.length ? (
+            <small>Tags: {ent.tags.join(', ')}</small>
+          ) : null}
+          <small style={{ display: 'block', marginTop: '0.5rem' }}>Created: {ent.createdAt ? new Date(ent.createdAt).toLocaleString() : 'N/A'}</small>
+          <div style={{ marginTop: '0.5rem' }}>
+            {attachments
+              .filter(a => a.diaryEntryId === ent._id)
+              .map(att => (
+                <div key={att._id}>
+                  <a href={att.fileUrl} target="_blank" rel="noopener noreferrer">
+                    {att.filename}
+                  </a>
+                </div>
+              ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

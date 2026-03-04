@@ -60,7 +60,7 @@
   display: none;
   position: fixed;
   top: 5px;
-  left: 5px;
+  left: 10px;
   z-index: 200;
   background: var(--sidebar-bg);
   color: var(--sidebar-text);

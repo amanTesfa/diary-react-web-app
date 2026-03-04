@@ -23,7 +23,7 @@ function App() {
 
   return (
     <div className={`app-container ${theme}`} style={{ display: 'flex', minHeight: '100vh' }}>
-      <Toaster position="top-center" toastOptions={{ duration: 3500 }} />
+      <Toaster position="top-center" toastOptions={{ duration: 2500 }} />
       <Sidebar theme={theme} setTheme={setTheme} active={active} setActive={setActive} isOpen={isOpen} setIsOpen={setIsOpen} />
       <main style={{ marginLeft: isOpen ? 220 : 60, flex: 1 }}>
         {active === 'Diary Entries' && <DiaryEntries />}
